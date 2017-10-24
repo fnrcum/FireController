@@ -1,8 +1,57 @@
 from xmlrpc.server import SimpleXMLRPCServer
 from xmlrpc.server import SimpleXMLRPCRequestHandler
-import argparse
+import threading
+import os
+from subprocess import run
 
 __author__ = 'Nicu'
+
+servers = {}
+output = {}
+
+
+class StoppableThread(threading.Thread):
+    """
+    Implements a thread that can be stopped.
+    """
+    def __init__(self,  name, target):
+        super(StoppableThread, self).__init__(name=name, target=target)
+        self._status = 'running'
+
+    def stop_me(self):
+        if self._status == 'running':
+            self._status = 'stopping'
+
+    def stopped(self):
+        self._status = 'stopped'
+
+    def is_running(self):
+        return self._status == 'running'
+
+    def is_stopping(self):
+        return self._status == 'stopping'
+
+    def is_stopped(self):
+        return self._status == 'stopped'
+
+
+def StartThread(id, target):
+    """
+    Starts a thread and adds an entry to the global dThreads dictionary.
+    """
+    servers[id] = StoppableThread(name=id, target=target)
+    servers[id].start()
+
+
+def StopThread(id):
+    """
+    Stops a thread and removes its entry from the global dThreads dictionary.
+    """
+    thread = servers[id]
+    if thread.is_running():
+        thread.stop_me()
+        thread.join()
+        del servers[id]
 
 
 class AppRPC(object):
@@ -28,21 +77,17 @@ class AppRPC(object):
                 'Accept': 'application/rpc.ver.01'
             }
 
-        def start_server(self, start_params):
-            pass
+        def start_server(self, start_params, server_hash):
+
+            def _start_server():
+                run([start_params], shell=True, stdout=output[server_hash], stderr=output[server_hash])
+
+            StartThread(id=server_hash, target=_start_server)
             return True
 
-
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-u", "--localhost", help="connected to (default: %(default)s)",
-                        default="https://localhost")
-    parser.add_argument("-p", "--port", help="port the app_rpc server will listen on (default: %(default)s)",
-                        default=6610, type=int)
-    args = parser.parse_args()
-    AppRPC(args.port)
-
+        def print_server_log(self, server_hash):
+            print(output[server_hash])
 
 if __name__ == '__main__':
-    main()
+    AppRPC(6160)
 
