@@ -7,7 +7,7 @@ def write_in_file(args, leftovers):
     if args.start and not args.stop:
         text = "start {0} {1}".format(args.path, [leftover for leftover in leftovers])
         cmd = [text.replace('[', "").replace(']', "").replace(",", "").replace("'", "")]
-        proc =
+        # proc =
     else:
         with open('controller.log', 'w') as f:
             f.write("Stopping {0}".format(args.path) + "\n200 - Server stopped ...")
