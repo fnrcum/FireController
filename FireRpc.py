@@ -2,7 +2,8 @@ from xmlrpc.server import SimpleXMLRPCServer
 from xmlrpc.server import SimpleXMLRPCRequestHandler
 import threading
 import os
-from subprocess import run, PIPE, STDOUT
+import io, time, sys
+from subprocess import run, PIPE, STDOUT, Popen
 
 __author__ = 'Nicu'
 
@@ -83,17 +84,25 @@ class AppRPC(object):
         def start_server(self, start_params, server_hash):
 
             def _start_server():
-                output[server_hash] = None
-                output[server_hash] = run(["start", start_params],
-                     stdout=PIPE,
-                     stderr=STDOUT,
-                     shell=True)
+                filename = '{}.log'.format(server_hash)
+                with io.open(filename, 'w') as writer, io.open(filename, 'rb', 1) as reader:
+                    process = Popen([start_params],
+                                    stdout=writer,
+                                    stderr=STDOUT,
+                                    shell=True)
+                    print("-----passed this------")
+                    while process.poll() is None:
+                        sys.stdout.write(str(reader.read()))
+                        time.sleep(0.5)
+                        # Read the remaining
+                    sys.stdout.write(reader.read())
 
             StartThread(id=server_hash, target=_start_server)
             return True
 
         def print_server_log(self, server_hash):
-            print(output[server_hash].stdout.read())
+            print(output[server_hash])
+            return output[server_hash]
 
         def stop_server(self, server_hash):
             StopThread(server_hash)
