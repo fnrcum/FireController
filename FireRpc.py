@@ -2,7 +2,7 @@ from xmlrpc.server import SimpleXMLRPCServer
 from xmlrpc.server import SimpleXMLRPCRequestHandler
 import threading
 import os
-from subprocess import run
+from subprocess import run, PIPE, STDOUT
 
 __author__ = 'Nicu'
 
@@ -17,13 +17,16 @@ class StoppableThread(threading.Thread):
     def __init__(self,  name, target):
         super(StoppableThread, self).__init__(name=name, target=target)
         self._status = 'running'
+        self._stop_event = threading.Event()
 
     def stop_me(self):
         if self._status == 'running':
             self._status = 'stopping'
+        self._stop_event.set()
 
     def stopped(self):
         self._status = 'stopped'
+        self._stop_event.is_set()
 
     def is_running(self):
         return self._status == 'running'
@@ -80,13 +83,21 @@ class AppRPC(object):
         def start_server(self, start_params, server_hash):
 
             def _start_server():
-                run([start_params], shell=True, stdout=output[server_hash], stderr=output[server_hash])
+                output[server_hash] = None
+                output[server_hash] = run(["start", start_params],
+                     stdout=PIPE,
+                     stderr=STDOUT,
+                     shell=True)
 
             StartThread(id=server_hash, target=_start_server)
             return True
 
         def print_server_log(self, server_hash):
-            print(output[server_hash])
+            print(output[server_hash].stdout.read())
+
+        def stop_server(self, server_hash):
+            StopThread(server_hash)
+
 
 if __name__ == '__main__':
     AppRPC(6160)
