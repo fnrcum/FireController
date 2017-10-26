@@ -1,13 +1,14 @@
 import argparse
-import threading
-from orm import *
+from xmlrpc.client import ServerProxy
+# from orm import *
 
 
 def start_stop_server(args, leftovers):
     if args.start and not args.stop:
-        text = "start {0} {1}".format(args.path, [leftover for leftover in leftovers])
-        cmd = [text.replace('[', "").replace(']', "").replace(",", "").replace("'", "")]
-        # proc =
+        s = ServerProxy('http://localhost:6160/rpc')
+        text = "{0}".format([leftover for leftover in leftovers])
+        params = [text.replace('[', "").replace(']', "").replace(",", "").replace("'", "")]
+        s.start_server(args.path, params)
     else:
         with open('controller.log', 'w') as f:
             f.write("Stopping {0}".format(args.path) + "\n200 - Server stopped ...")

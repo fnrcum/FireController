@@ -9,7 +9,9 @@ __author__ = 'Nicu'
 
 servers = {}
 output = {}
-
+_params = " TheIsland?listen?Port=7778?QueryPort=27014?MaxPlayers=2?bRawSockets?AllowCrateSpawnsOnTopOfStructures=True?RCONEnabled=True?RCONPort=32330 " \
+             "-NoBattlEye -insecure -noantispeedhack -servergamelog -servergamelogincludetribelogs " \
+             "-ServerRCONOutputTribeLogs -usecache -nosteamclient -game -server -log"
 
 class StoppableThread(threading.Thread):
     """
@@ -81,23 +83,25 @@ class AppRPC(object):
                 'Accept': 'application/rpc.ver.01'
             }
 
-        def start_server(self, start_params, server_hash):
+        def start_server(self, server_hash, params):
 
-            def _start_server():
-                filename = '{}.log'.format(server_hash)
-                with io.open(filename, 'w') as writer, io.open(filename, 'rb', 1) as reader:
-                    process = Popen([start_params],
-                                    stdout=writer,
-                                    stderr=STDOUT,
-                                    shell=True)
-                    print("-----passed this------")
-                    while process.poll() is None:
-                        sys.stdout.write(str(reader.read()))
-                        time.sleep(0.5)
-                        # Read the remaining
-                    sys.stdout.write(reader.read())
+            filename = '{}.log'.format(server_hash)
+            with io.open(filename, 'w') as writer, io.open(filename, 'rb', 1) as reader:
+                process = Popen(["start", server_hash+"\\ShooterGame\\Binaries\\Win64\\ShooterGameServer.exe", params],
+                                stdout=writer,
+                                stderr=STDOUT,
+                                shell=True,
+                                bufsize=0)
+                # print("-----passed this------")
+                while process.poll() is None:
+                    sys.stdout.write(str(reader.read()))
+                    # sys.stdout.flush()
+                    time.sleep(0.5)
+                    # Read the remaining
+                sys.stdout.write(str(reader.read()))
+                # sys.stdout.flush()
 
-            StartThread(id=server_hash, target=_start_server)
+            # StartThread(id=server_hash, target=_start_server)
             return True
 
         def print_server_log(self, server_hash):
