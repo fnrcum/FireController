@@ -1,9 +1,8 @@
 from xmlrpc.server import SimpleXMLRPCServer
 from xmlrpc.server import SimpleXMLRPCRequestHandler
 import threading
-import os
 import io, time, sys
-from subprocess import run, PIPE, STDOUT, Popen
+from subprocess import STDOUT, Popen
 
 __author__ = 'Nicu'
 

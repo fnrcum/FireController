@@ -35,7 +35,7 @@ def find_servers():
     try:
         for address in master.find(region='rest',
                                    gamedir=u"ark_survival_evolved"):
-            if str(address[0]) == "86.126.75.154":
+            if str(address[0]) == "86.126.74.236":
                 _results.append(pool.spawn(get_server_stats, address))
                 count += 1
             if count == max:
