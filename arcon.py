@@ -2,21 +2,21 @@ import source_rcon as rcon
 
 
 class ServerRcon(object):
-    def __init__(self, ip, port, password, ark_command):
+    def __init__(self, ip, port, password):
         self.ip = ip
         self.port = port
         self.password = password
-        self.ark_command = ark_command
 
-    def run_command(self):
+    def run_command(self, ark_command):
         try:
-            server = rcon.SourceRcon(self.ip, self.port, self.password, timeout=10)
-            result = server.rcon(self.ark_command)
+            server = rcon.SourceRcon(self.ip, self.port, self.password, timeout=1)
+            result = server.rcon(ark_command)
             return result
         except Exception as e:
             print('Unable to connect to RCON! \n {}'.format(e))
 
 
-conn = ServerRcon("192.168.1.101", 27015, "3hoxfxmjfS", "echo Hello, world")
+conn = ServerRcon("86.126.74.236", 32331, "3hoxfxmjfS")
 
-conn.run_command()
+# print(conn.run_command("echo Hello"))
+print(conn.run_command("ServerChat hello"))

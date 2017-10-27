@@ -1,10 +1,7 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-"""http://developer.valvesoftware.com/wiki/Source_RCON_Protocol"""
-
-import select
-import socket
-import struct
+import select, socket, struct
 
 SERVERDATA_AUTH = 3
 SERVERDATA_AUTH_RESPONSE = 2
@@ -12,10 +9,10 @@ SERVERDATA_AUTH_RESPONSE = 2
 SERVERDATA_EXECCOMMAND = 2
 SERVERDATA_RESPONSE_VALUE = 0
 
-MAX_COMMAND_LENGTH=510 # found by trial & error
+MAX_COMMAND_LENGTH = 510  # found by trial & error
 
-MIN_MESSAGE_LENGTH=4+4+1+1 # command (4), id (4), string1 (1), string2 (1)
-MAX_MESSAGE_LENGTH=4+4+4096+1 # command (4), id (4), string (4096), string2 (1)
+MIN_MESSAGE_LENGTH = 4+4+1+1  # command (4), id (4), string1 (1), string2 (1)
+MAX_MESSAGE_LENGTH = 4+4+4096+1  # command (4), id (4), string (4096), string2 (1)
 
 # there is no indication if a packet was split, and they are split by lines
 # instead of bytes, so even the size of split packets is somewhat random.
@@ -23,8 +20,10 @@ MAX_MESSAGE_LENGTH=4+4+4096+1 # command (4), id (4), string (4096), string2 (1)
 # extra packet that may never come if the previous packet was this large.
 PROBABLY_SPLIT_IF_LARGER_THAN = MAX_MESSAGE_LENGTH - 400
 
+
 class SourceRconError(Exception):
     pass
+
 
 class SourceRcon(object):
     """Example usage:
@@ -47,12 +46,9 @@ class SourceRcon(object):
 
     def connect(self):
         """Connect to the server. Should only be used internally."""
-        try:
-            self.tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.tcp.settimeout(self.timeout)
-            self.tcp.connect((self.host, self.port))
-        except socket.error as msg:
-            raise SourceRconError('Disconnected from RCON with reason "{}", please restart program to continue.'.format(msg))
+        self.tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.tcp.settimeout(self.timeout)
+        self.tcp.connect((self.host, self.port))
 
     def send(self, cmd, message):
         """Send command and message to the server. Should only be used internally."""
@@ -112,7 +108,7 @@ class SourceRcon(object):
                     break
 
             if len(buf) != packetsize:
-                raise SourceRconError('Received RCON packet with bad length (%d of %d bytes)' % (len(buf),packetsize,))
+                raise SourceRconError('Received RCON packet with bad length (%d of %d bytes)' % (len(buf), packetsize,))
 
             # parse the packet
             requestid = struct.unpack('<l', buf[:4])[0]
@@ -122,7 +118,7 @@ class SourceRcon(object):
                 raise SourceRconError('Bad RCON password')
 
             elif requestid != self.reqid:
-                raise SourceRconError('RCON request id error: %d, expected %d' % (requestid,self.reqid,))
+                raise SourceRconError('RCON request id error: %d, expected %d' % (requestid, self.reqid,))
 
             response = struct.unpack('<l', buf[4:8])[0]
 
@@ -168,6 +164,7 @@ class SourceRcon(object):
         # special treatment for sending whole scripts
         if '\n' in command:
             commands = command.split('\n')
+
             def f(x): y = x.strip(); return len(y) and not y.startswith("//")
             commands = filter(f, commands)
             results = map(self.rcon, commands)

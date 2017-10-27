@@ -7,10 +7,6 @@ from subprocess import STDOUT, Popen
 __author__ = 'Nicu'
 
 servers = {}
-output = {}
-_params = " TheIsland?listen?Port=7778?QueryPort=27014?MaxPlayers=2?bRawSockets?AllowCrateSpawnsOnTopOfStructures=True?RCONEnabled=True?RCONPort=32330 " \
-             "-NoBattlEye -insecure -noantispeedhack -servergamelog -servergamelogincludetribelogs " \
-             "-ServerRCONOutputTribeLogs -usecache -nosteamclient -game -server -log"
 
 class StoppableThread(threading.Thread):
     """
