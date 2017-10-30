@@ -1,11 +1,11 @@
 from distutils.core import setup
 import py2exe, sys, os
 import cmd, code, pdb
-
-# sys.argv.append('py2exe')
+import orm
 
 setup(
-    options={'py2exe': {'bundle_files': 1, 'compressed': True}},
+    options={'py2exe': {'bundle_files': 1, 'compressed': True, 'includes': ["sqlalchemy", "pymysql",
+                                                                            "sqlalchemy.sql.default_comparator"]}},
     windows=[{'script': "FireController.py"}],
     zipfile=None,
 )

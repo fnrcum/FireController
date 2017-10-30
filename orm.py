@@ -4,8 +4,8 @@ from sqlalchemy import Column, Integer, String, Text, ForeignKey, create_engine,
 from sqlalchemy.orm import sessionmaker
 Base = declarative_base()
 
-# config = 'mysql+pymysql://root:compas10@54.244.61.130/qa_course'
-config = 'mysql+pymysql://root:dreamteam@192.168.1.101/firestarter'
+
+config = 'mysql+pymysql://root:dreamteam@127.0.0.1/firestarter'
 secret_key = 'FEF9B%399-!8EF6- 4B16-[9BD4-092B1<85D632D'
 
 
@@ -62,7 +62,8 @@ class Server(Base):
     Id = Column(String(36), primary_key=True)
     Name = Column(String(100))
     Description = Column(String(300))
-    Params = Column(String(300))
+    Params = Column(String(600))
+    Config = Column(String(600))
     PathStart = Column(String(300))
     PathStop = Column(String(300))
     Status = Column(Integer)
@@ -71,12 +72,14 @@ class Server(Base):
     PlayersMax = Column(Integer)
     Version = Column(Integer)
     LastUpdate = Column(DateTime)
+    LoadTime = Column(Integer)
 
-    def __init__(self, Id, Name, Description, Params, PathStart, PathStop, Status, Map, Players, PlayersMax, Version, LastUpdate):
+    def __init__(self, Id, Name, Description, Params, Config, PathStart, PathStop, Status, Map, Players, PlayersMax, Version, LastUpdate, LoadTime):
         self.Id = Id
         self.Name = Name
         self.Description = Description
         self.Params = Params
+        self.Config = Config
         self.PathStart = PathStart
         self.PathStop = PathStop
         self.Status = Status
@@ -85,6 +88,7 @@ class Server(Base):
         self.PlayersMax = PlayersMax
         self.Version = Version
         self.LastUpdate = LastUpdate
+        self.LoadTime = LoadTime
 
     def __repr__(self):
         return '<Server: {}>'.format(self.Id)
@@ -113,8 +117,8 @@ class Activity(Base):
 engine = create_engine(config, echo=True)
 session = sessionmaker()
 session.configure(bind=engine)
-Base.metadata.create_all(engine)
+# Base.metadata.create_all(engine)
 s = session()
 
-s.execute(update(Server).where(Server.Id == "2fab42c6-e260-473c-abfc-1725b7b3daeb").values(Status=100))
-s.commit()
+# s.execute(update(Server).where(Server.Id == "2fab42c6-e260-473c-abfc-1725b7b3daeb").values(LoadTime=10))
+# s.commit()

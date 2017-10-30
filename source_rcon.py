@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 import select, socket, struct
@@ -31,7 +30,7 @@ class SourceRcon(object):
        server = SourceRcon.SourceRcon('1.2.3.4', 27015, 'secret')
        print server.rcon('cvarlist')
     """
-    def __init__(self, host, port=27015, password='', timeout=1.0):
+    def __init__(self, host, port=27015, password=b'', timeout=1.0):
         self.host = host
         self.port = port
         self.password = password
@@ -56,22 +55,22 @@ class SourceRcon(object):
             raise SourceRconError('RCON message too large to send')
 
         self.reqid += 1
-        data = struct.pack('<l', self.reqid) + struct.pack('<l', cmd) + message + '\x00\x00'
-        self.tcp.send(struct.pack('<l', len(data)) + data)
+        data = struct.pack(b'<l', self.reqid) + struct.pack(b'<l', cmd) + message + b'\x00\x00'
+        self.tcp.send(struct.pack(b'<l', len(data)) + data)
 
     def receive(self):
         """Receive a reply from the server. Should only be used internally."""
         packetsize = False
         requestid = False
         response = False
-        message = ''
-        message2 = ''
+        message = b''
+        message2 = b''
 
         # response may be split into multiple packets, we don't know how many
         # so we loop until we decide to finish
         while 1:
             # read the size of this packet
-            buf = ''
+            buf = b''
 
             while len(buf) < 4:
                 try:
@@ -88,13 +87,13 @@ class SourceRcon(object):
                 # we waited for a packet but there isn't anything
                 break
 
-            packetsize = struct.unpack('<l', buf)[0]
+            packetsize = struct.unpack(b'<l', buf)[0]
 
             if packetsize < MIN_MESSAGE_LENGTH or packetsize > MAX_MESSAGE_LENGTH:
                 raise SourceRconError('RCON packet claims to have illegal size: %d bytes' % (packetsize,))
 
             # read the whole packet
-            buf = ''
+            buf = b''
 
             while len(buf) < packetsize:
                 try:
@@ -111,7 +110,7 @@ class SourceRcon(object):
                 raise SourceRconError('Received RCON packet with bad length (%d of %d bytes)' % (len(buf), packetsize,))
 
             # parse the packet
-            requestid = struct.unpack('<l', buf[:4])[0]
+            requestid = struct.unpack(b'<l', buf[:4])[0]
 
             if requestid == -1:
                 self.disconnect()
@@ -120,24 +119,24 @@ class SourceRcon(object):
             elif requestid != self.reqid:
                 raise SourceRconError('RCON request id error: %d, expected %d' % (requestid, self.reqid,))
 
-            response = struct.unpack('<l', buf[4:8])[0]
+            response = struct.unpack(b'<l', buf[4:8])[0]
 
             if response == SERVERDATA_AUTH_RESPONSE:
                 # This response says we're successfully authed.
                 return True
 
             elif response != SERVERDATA_RESPONSE_VALUE:
-                raise SourceRconError('Invalid RCON command response: %d' % (response,))
+                raise SourceRconError(b'Invalid RCON command response: %d' % (response,))
 
             # extract the two strings using index magic
             str1 = buf[8:]
-            pos1 = str1.index('\x00')
+            pos1 = str1.index(b'\x00')
             str2 = str1[pos1+1:]
-            pos2 = str2.index('\x00')
+            pos2 = str2.index(b'\x00')
             crap = str2[pos2+1:]
 
             if crap:
-                raise SourceRconError('RCON response contains %d superfluous bytes' % (len(crap),))
+                raise SourceRconError(b'RCON response contains %d superfluous bytes' % (len(crap),))
 
             # add the strings to the full message result
             message += str1[:pos1]
@@ -162,13 +161,13 @@ class SourceRcon(object):
         """Send RCON command to the server. Connect and auth if necessary,
            handle dropped connections, send command and return reply."""
         # special treatment for sending whole scripts
-        if '\n' in command:
+        if b'\n' in command:
             commands = command.split('\n')
 
-            def f(x): y = x.strip(); return len(y) and not y.startswith("//")
+            def f(x): y = x.strip(); return len(y) and not y.startswith(b"//")
             commands = filter(f, commands)
             results = map(self.rcon, commands)
-            return "".join(results)
+            return b"".join(results)
 
         # send a single command. connect and auth if necessary.
         try:
@@ -183,7 +182,7 @@ class SourceRcon(object):
             auth = self.receive()
             # the first packet may be a "you have been banned" or empty string.
             # in the latter case, fetch the second packet
-            if auth == '':
+            if auth == b'':
                 auth = self.receive()
 
             if auth is not True:

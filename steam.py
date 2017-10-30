@@ -27,7 +27,7 @@ def get_server_stats(address):
 
 def find_servers():
     count = 0
-    max = 1
+    max = 2
     _results = []
     master = MasterServerQuerier(
         address=(MASTER_HOST, 27011), timeout=MASTER_TIMEOUT
@@ -35,7 +35,7 @@ def find_servers():
     try:
         for address in master.find(region='rest',
                                    gamedir=u"ark_survival_evolved"):
-            if str(address[0]) == "86.126.74.236":
+            if str(address[0]) == "82.76.101.145":
                 _results.append(pool.spawn(get_server_stats, address))
                 count += 1
             if count == max:

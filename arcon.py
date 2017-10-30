@@ -16,7 +16,7 @@ class ServerRcon(object):
             print('Unable to connect to RCON! \n {}'.format(e))
 
 
-conn = ServerRcon("86.126.74.236", 32331, "3hoxfxmjfS")
+conn = ServerRcon(b"192.168.1.101", 32331, b"3hoxfxmjfS")
 
 # print(conn.run_command("echo Hello"))
-print(conn.run_command("ServerChat hello"))
+print(conn.run_command(b"listplayers"))
