@@ -5,6 +5,7 @@ import source_rcon as rcon
 import datetime
 from time import sleep
 from orm import *
+from typing import List, Dict
 
 __author__ = 'Nicu'
 
@@ -20,12 +21,12 @@ class DateTimeFormatter(object):
 
 
 class ServerRcon(object):
-    def __init__(self, ip, port, password):
+    def __init__(self, ip: bytes, port: int, password: bytes):
         self.ip = ip
         self.port = port
         self.password = password
 
-    def run_command(self, ark_command):
+    def run_command(self, ark_command: bytes) -> bytes:
         try:
             server = rcon.SourceRcon(self.ip, self.port, self.password, timeout=1)
             result = server.rcon(ark_command)
@@ -35,7 +36,7 @@ class ServerRcon(object):
 
 
 class AppRPC(object):
-    def __init__(self, port):
+    def __init__(self, port: int):
         self.rpc_instance = SimpleXMLRPCServer(("localhost", port),
                                                requestHandler=AppRPC.RequestHandler,
                                                logRequests=True, allow_none=True)
@@ -57,7 +58,7 @@ class AppRPC(object):
                 'Accept': 'application/rpc.ver.01'
             }
 
-        def start_server(self, server_hash, config, params, rcon_port):
+        def start_server(self, server_hash: str, config: str, params: str, rcon_port: int) -> bool:
             s.execute(update(Server).where(Server.Id == server_hash).values(Status=201))
             s.commit()
             conn = ServerRcon(b"127.0.0.1", int(rcon_port), b"3hoxfxmjfS")
@@ -75,7 +76,7 @@ class AppRPC(object):
             s.commit()
             return True
 
-        def stop_server(self, server_hash, rcon_port):
+        def stop_server(self, server_hash: str, rcon_port: int):
             s.execute(update(Server).where(Server.Id == server_hash).values(Status=301))
             s.commit()
             conn = ServerRcon(b"127.0.0.1", int(rcon_port), b"3hoxfxmjfS")

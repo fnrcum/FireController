@@ -30,7 +30,7 @@ class SourceRcon(object):
        server = SourceRcon.SourceRcon('1.2.3.4', 27015, 'secret')
        print server.rcon('cvarlist')
     """
-    def __init__(self, host, port=27015, password=b'', timeout=1.0):
+    def __init__(self, host: bytes, port: int = 27015, password: bytes = b'', timeout: float = 1.0):
         self.host = host
         self.port = port
         self.password = password
@@ -49,28 +49,28 @@ class SourceRcon(object):
         self.tcp.settimeout(self.timeout)
         self.tcp.connect((self.host, self.port))
 
-    def send(self, cmd, message):
+    def send(self, cmd: bytes, message: bytes):
         """Send command and message to the server. Should only be used internally."""
         if len(message) > MAX_COMMAND_LENGTH:
             raise SourceRconError('RCON message too large to send')
 
         self.reqid += 1
-        data = struct.pack(b'<l', self.reqid) + struct.pack(b'<l', cmd) + message + b'\x00\x00'
-        self.tcp.send(struct.pack(b'<l', len(data)) + data)
+        data = struct.pack('<l', self.reqid) + struct.pack('<l', cmd) + message + b'\x00\x00'
+        self.tcp.send(struct.pack('<l', len(data)) + data)
 
     def receive(self):
         """Receive a reply from the server. Should only be used internally."""
         packetsize = False
         requestid = False
         response = False
-        message = b''
-        message2 = b''
+        message = ''
+        message2 = ''
 
         # response may be split into multiple packets, we don't know how many
         # so we loop until we decide to finish
         while 1:
             # read the size of this packet
-            buf = b''
+            buf = ''
 
             while len(buf) < 4:
                 try:
@@ -87,13 +87,13 @@ class SourceRcon(object):
                 # we waited for a packet but there isn't anything
                 break
 
-            packetsize = struct.unpack(b'<l', buf)[0]
+            packetsize = struct.unpack('<l', buf)[0]
 
             if packetsize < MIN_MESSAGE_LENGTH or packetsize > MAX_MESSAGE_LENGTH:
                 raise SourceRconError('RCON packet claims to have illegal size: %d bytes' % (packetsize,))
 
             # read the whole packet
-            buf = b''
+            buf = ''
 
             while len(buf) < packetsize:
                 try:
@@ -110,7 +110,7 @@ class SourceRcon(object):
                 raise SourceRconError('Received RCON packet with bad length (%d of %d bytes)' % (len(buf), packetsize,))
 
             # parse the packet
-            requestid = struct.unpack(b'<l', buf[:4])[0]
+            requestid = struct.unpack('<l', buf[:4])[0]
 
             if requestid == -1:
                 self.disconnect()
@@ -119,14 +119,14 @@ class SourceRcon(object):
             elif requestid != self.reqid:
                 raise SourceRconError('RCON request id error: %d, expected %d' % (requestid, self.reqid,))
 
-            response = struct.unpack(b'<l', buf[4:8])[0]
+            response = struct.unpack('<l', buf[4:8])[0]
 
             if response == SERVERDATA_AUTH_RESPONSE:
                 # This response says we're successfully authed.
                 return True
 
             elif response != SERVERDATA_RESPONSE_VALUE:
-                raise SourceRconError(b'Invalid RCON command response: %d' % (response,))
+                raise SourceRconError('Invalid RCON command response: %d' % (response,))
 
             # extract the two strings using index magic
             str1 = buf[8:]
@@ -136,7 +136,7 @@ class SourceRcon(object):
             crap = str2[pos2+1:]
 
             if crap:
-                raise SourceRconError(b'RCON response contains %d superfluous bytes' % (len(crap),))
+                raise SourceRconError('RCON response contains %d superfluous bytes' % (len(crap),))
 
             # add the strings to the full message result
             message += str1[:pos1]
@@ -157,12 +157,12 @@ class SourceRcon(object):
 
         return message
 
-    def rcon(self, command):
+    def rcon(self, command: bytes):
         """Send RCON command to the server. Connect and auth if necessary,
            handle dropped connections, send command and return reply."""
         # special treatment for sending whole scripts
         if b'\n' in command:
-            commands = command.split('\n')
+            commands = command.split(b'\n')
 
             def f(x): y = x.strip(); return len(y) and not y.startswith(b"//")
             commands = filter(f, commands)

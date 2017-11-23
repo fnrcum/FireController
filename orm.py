@@ -114,7 +114,7 @@ class Activity(Base):
         return '<Activity: {}>'.format(self.name)
 
 
-engine = create_engine(config, echo=True)
+engine = create_engine(config, echo=True, pool_pre_ping=True)
 session = sessionmaker()
 session.configure(bind=engine)
 # Base.metadata.create_all(engine)

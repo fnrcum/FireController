@@ -4,6 +4,8 @@ from gevent.pool import Pool
 from valve.source.master_server import MasterServerQuerier
 from valve.source.a2s import ServerQuerier, NoResponseError
 from valve.source.messages import BrokenMessageError
+from typing import List
+import requests
 
 MASTER_HOST = 'hl2master.steampowered.com'
 MASTER_TIMEOUT = 60
@@ -11,7 +13,12 @@ SERVER_TIMEOUT = 5
 pool = Pool(size=3)
 
 
-def get_server_stats(address):
+def get_ip_from_dns(dns: str) -> str:
+    response = requests.post('http://ping.eu/action.php?atype=3', data={'host': dns, 'go': 'Go'})
+    return response.text.split(dns+" has address <span class=t2>")[1].split('</span>')[0]
+
+
+def get_server_stats(address: List[str]):
     server = ServerQuerier(address, timeout=SERVER_TIMEOUT)
     try:
         info = server.info()
@@ -27,15 +34,16 @@ def get_server_stats(address):
 
 def find_servers():
     count = 0
-    max = 2
+    max = 1
     _results = []
     master = MasterServerQuerier(
         address=(MASTER_HOST, 27011), timeout=MASTER_TIMEOUT
     )
     try:
+        ip = get_ip_from_dns('gameservers.go.ro')
         for address in master.find(region='rest',
                                    gamedir=u"ark_survival_evolved"):
-            if str(address[0]) == "82.76.101.145":
+            if str(address[0]) == ip:
                 _results.append(pool.spawn(get_server_stats, address))
                 count += 1
             if count == max:
